@@ -12,15 +12,15 @@ FOLDER_ID = os.environ.get("FOLDER_ID")
 CLOUD_ID = os.environ.get("CLOUD_ID")
 
 
-def test_metrics(mon: Monitoring, n):
+def test_metrics(metrics: Monitoring, n):
     _t = datetime.datetime.now(datetime.timezone.utc)
-    mon.dgauge("temperature", random.random() * 100, ts=_t, labels={"building": "office", "room": "openspace"})
-    mon.counter("number", n, ts=_t, labels={"building": "office", "room": "openspace"})
+    metrics.dgauge("temperature", random.random() * 100, ts=_t, labels={"building": "office", "room": "openspace"})
+    metrics.counter("number", n, ts=_t, labels={"building": "office", "room": "openspace"})
 
 
 if __name__ == '__main__':
 
-    _mon = Monitoring(
+    _metrics = Monitoring(
         credentials={
             "service_account_key": {
                 "service_account_id": SERVICE_ACCOUNT_ID,
@@ -34,6 +34,6 @@ if __name__ == '__main__':
     )
 
     for n in range(1000):
-        with Chrono(_mon, labels={"with": "workers"}, mul=10**3):
-            test_metrics(_mon, n)
+        with Chrono(_metrics, labels={"with": "workers"}, mul=10**3):
+            test_metrics(_metrics, n)
             time.sleep(0.3)
