@@ -17,6 +17,7 @@
 
 Service Account Keys only ...
 
+[Access management](https://cloud.yandex.com/en/docs/monitoring/security/)
 
 ### Service Account Keys
 
@@ -88,6 +89,6 @@ with Chrono(metrics, name="elapsed", labels={"measured": "calculation"}, mul=10*
 
 _name_ - Name of the metric. The default value is **elapsed**. Additional metric **process_{name}** sum of the kernel and user-space CPU time.
 
-_mul_ - process time for profiling default as seconds mul = 10^9 .. nanoseconds mul = 1
+_mul_ - Process time for profiling default as seconds mul = 10^9 .. nanoseconds mul = 1
 
 _labels_ - Metric labels as _key:value_ pairs.
