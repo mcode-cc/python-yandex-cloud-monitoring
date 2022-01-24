@@ -89,5 +89,5 @@ setup(
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: System :: Networking"
     ],
-    keywords='yandexcloud monitoring trace'
+    keywords='yandex cloud monitoring trace'
 )

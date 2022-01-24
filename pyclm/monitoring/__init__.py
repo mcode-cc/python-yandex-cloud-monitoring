@@ -1,36 +1,17 @@
 import os
-import sys
-import weakref
 import time
+import datetime
+import weakref
+from multiprocessing import Process, Queue
+
 import jwt
 import requests
-import datetime
-from multiprocessing import Process, Queue
 
 
 API_IAM = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 API_MONITORING = "https://monitoring.api.cloud.yandex.net/monitoring/v2/data/write"
 IAM_EXP = 4*60*60
 AUTH_TYPE = "Bearer"
-_format = {
-    "ts": "string",
-    "labels": "object",
-    "metrics": [
-        {
-            "name": "string",
-            "labels": "object",
-            "type": "string",
-            "ts": "string",
-            "value": "number",
-            "timeseries": [
-                {
-                    "ts": "string",
-                    "value": "number"
-                }
-            ]
-        }
-    ]
-}
 
 
 class Monitoring:
@@ -60,19 +41,19 @@ class Monitoring:
             result["timeseries"] = timeseries
         self._send(result)
 
-    #  Числовой показатель. Задается дробным числом.
+    #  Numeric indicator. Specified as a fractional number.
     def dgauge(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "DGAUGE", ts, labels, timeseries)
 
-    #  Числовой показатель. Задается целым числом.
+    #  Numeric indicator. Specified as an integer.
     def igauge(self, name: str, value: int, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "IGAUGE", ts, labels, timeseries)
 
-    #  Счетчик.
+    #  Counter.
     def counter(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "COUNTER", ts, labels, timeseries)
 
-    #  Производная.
+    #  Derivative.
     def rate(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "RATE", ts, labels, timeseries)
 
