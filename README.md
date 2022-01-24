@@ -19,8 +19,10 @@ Service Account Keys only ...
 
 [Access management](https://cloud.yandex.com/en/docs/monitoring/security/)
 
-### Service Account Keys
 
+### Service Account Keys & Roles
+
+For write metrics, add a folder role: _monitoring.editor_
 
 ```python
 import datetime
