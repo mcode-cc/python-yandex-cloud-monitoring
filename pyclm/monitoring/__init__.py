@@ -26,7 +26,7 @@ class Monitoring:
         self._send = PM(*args, workers=workers) if workers > 0 else Ingestion(*args)
 
     def _metric(
-        self, name: str, value, t:str = "DGAUGE", ts: datetime = None,
+        self, name: str, value, t: str = "DGAUGE", ts: datetime = None,
         labels: dict = None, timeseries: list = None
     ):
         result = {
@@ -41,19 +41,22 @@ class Monitoring:
             result["timeseries"] = timeseries
         self._send(result)
 
-    #  Numeric indicator. Specified as a fractional number.
+    #  Numeric value (decimal). It shows the metric value at a certain point in time.
+    #  For example, the amount of used RAM
     def dgauge(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "DGAUGE", ts, labels, timeseries)
 
-    #  Numeric indicator. Specified as an integer.
+    #  Numeric value (integer). It shows the metric value at a certain point in time.
     def igauge(self, name: str, value: int, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "IGAUGE", ts, labels, timeseries)
 
-    #  Counter.
+    #  Tag. It shows the metric value that increases over time.
+    #  For example, the number of days of service continuous running.
     def counter(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "COUNTER", ts, labels, timeseries)
 
-    #  Derivative.
+    #  Derivative value. It shows the change in the metric value over time.
+    #  For example, the number of requests per second.
     def rate(self, name: str, value: float, ts: datetime = None, labels: dict = None, timeseries: list = None):
         self._metric(name, value, "RATE", ts, labels, timeseries)
 

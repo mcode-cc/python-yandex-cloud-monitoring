@@ -46,18 +46,21 @@ metrics = Monitoring(
 )
 
 for n in range(1000):
-    #  Numeric indicator. Specified as a fractional number.
+    #  Numeric value (decimal). It shows the metric value at a certain point in time.
+    #  For example, the amount of used RAM
     metrics.dgauge(
         "temperature", 
         random.random(), 
         ts=datetime.datetime.now(datetime.timezone.utc), 
         labels={"building": "office", "room": "openspace"}
     )
-    #  Counter.
+    #  Tag. It shows the metric value that increases over time.
+    #  For example, the number of days of service continuous running.
     metrics.counter("counter", n, labels={"building": "office", "room": "openspace"})
-    #  Numeric indicator. Specified as an integer.
+    #  Numeric value (integer). It shows the metric value at a certain point in time.
     metrics.igauge("number", n, labels={"building": "office", "room": "openspace"})
-    #  Derivative.
+    #  Derivative value. It shows the change in the metric value over time.
+    #  For example, the number of requests per second.
     metrics.rate("rate", random.random(), labels={"building": "office", "room": "openspace"})
 
 ```
