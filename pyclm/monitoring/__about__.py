@@ -45,5 +45,5 @@ __uri__ = "https://github.com/mcode-cc/python-yandex-cloud-monitoring"
 __version__ = "0.0.1"
 __author__ = "MCode GmbH"
 __email__ = "monitoring.pyclm@mcode.cc"
-__license__ = "GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007"
+__license__ = "GPLv3"
 __copyright__ = "2022 %s" % __author__
