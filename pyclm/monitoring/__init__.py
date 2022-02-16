@@ -62,22 +62,25 @@ class Monitoring:
 
 
 class Chrono(object):
-    def __init__(self, carry: Monitoring = None, name="elapsed", labels: dict = None, mul=10**9):
+    def __init__(self, carry: Monitoring = None, name="elapsed", labels: dict = None, mul=10**9, process_time=False):
         self.client = carry
         self.name = name
         self.labels = labels.copy() if labels is not None else {}
         self.mul = mul
+        self.process_time = process_time
 
     def __enter__(self):
         self._time_ns = time.time_ns()
-        self._process_time_ns = time.process_time_ns()
+        if self.process_time:
+            self._process_time_ns = time.process_time_ns()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.client is not None:
-            self.client.dgauge(
-                "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
-            )
+            if self.process_time:
+                self.client.dgauge(
+                    "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
+                )
             self.client.dgauge(self.name, (time.time_ns() - self._time_ns) / self.mul, labels=self.labels)
 
 
