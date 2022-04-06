@@ -69,7 +69,7 @@ setup(
     include_package_data=True,
     data_files=[('.', ['LICENSE', 'COPYRIGHT'])],
     zip_safe=False,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Development Status :: 1 - Planning",
@@ -77,7 +77,6 @@ setup(
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",

@@ -37,3 +37,4 @@ if __name__ == '__main__':
         with Chrono(_metrics, labels={"with": "workers"}, mul=10**3):
             test_metrics(_metrics, n)
             time.sleep(0.3)
+
