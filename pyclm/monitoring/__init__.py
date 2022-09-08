@@ -18,13 +18,14 @@ AUTH_TYPE = "Bearer"
 class Monitoring:
     def __init__(
         self, credentials: dict = None, group_id: str = "default", resource_type: str = None, resource_id: str = None,
-            elements: int = 100, period: int = 10, workers: int = 0
+            elements: int = 100, period: int = 10, workers: int = 0, log=None
     ):
         args = [
             credentials, group_id, resource_type or str(os.uname()[1]), resource_id or str(os.getpid()),
             elements if 0 < elements <= 100 else 100, period
         ]
-        self._send = PM(*args, workers=workers) if workers > 0 else Ingestion(*args)
+        self.log = log or logging.getLogger('YandexMonitoring')
+        self._send = PM(*args, workers=workers, log=self.log) if workers > 0 else Ingestion(*args)
 
     def _metric(
         self, name: str, value, t: str = "DGAUGE", ts: datetime = None,
@@ -86,8 +87,8 @@ class Chrono(object):
 
 
 class PM:
-    def __init__(self, *args, workers: int = 1):
-        self.log = logging.getLogger('YandexMonitoring')
+    def __init__(self, *args, workers: int = 1, log=None):
+        self.log = log
         self.workers = []
         self.queue = Queue()
         for _ in range(workers):
