@@ -3,6 +3,7 @@ import time
 import datetime
 import weakref
 from multiprocessing import Process, Queue
+import logging
 
 import jwt
 import requests
@@ -10,7 +11,7 @@ import requests
 
 API_IAM = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 API_MONITORING = "https://monitoring.api.cloud.yandex.net/monitoring/v2/data/write"
-IAM_EXP = 4*60*60
+IAM_EXP = 3 * 60 * 60
 AUTH_TYPE = "Bearer"
 
 
@@ -86,6 +87,7 @@ class Chrono(object):
 
 class PM:
     def __init__(self, *args, workers: int = 1):
+        self.log = logging.getLogger('YandexMonitoring')
         self.workers = []
         self.queue = Queue()
         for _ in range(workers):
@@ -103,13 +105,16 @@ class PM:
     def __call__(self, value: dict):
         self.queue.put(value)
 
-    @staticmethod
-    def process(*args, queue: Queue = None):
+    def process(self, *args, queue: Queue = None):
         sender = Ingestion(*args)
         while True:
             value = queue.get()
             if isinstance(value, dict):
-                sender(value)
+                try:
+                    sender(value)
+                except Exception as e:
+                    self.log.error(str(e))
+                    self.queue.put(value)
             else:
                 break
 
@@ -155,7 +160,8 @@ class Ingestion:
         if response.status_code == 200 and response.json()["writtenMetricsCount"] == len(self.metrics):
             self.metrics = []
             self.timer = time.time() + self.period
-        return response
+        else:
+            raise Exception("{status} Send metrics: {text}".format(status=response.status_code, text=response.text))
 
     def __call__(self, value: dict):
         self.metrics.append(value)
