@@ -15,6 +15,10 @@ IAM_EXP = 3 * 60 * 60
 AUTH_TYPE = "Bearer"
 
 
+class MonitoringRequestError(Exception):
+    pass
+
+
 class Monitoring:
     def __init__(
         self, credentials: dict = None, group_id: str = "default", resource_type: str = None, resource_id: str = None,
@@ -24,7 +28,7 @@ class Monitoring:
             credentials, group_id, resource_type or str(os.uname()[1]), resource_id or str(os.getpid()),
             elements if 0 < elements <= 100 else 100, period
         ]
-        self.log = log or logging.getLogger('YandexMonitoring')
+        self.log = log or logging.getLogger("YandexMonitoring")
         self._send = PM(*args, workers=workers, log=self.log) if workers > 0 else Ingestion(*args)
 
     def _metric(
@@ -78,12 +82,15 @@ class Chrono(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.client is not None:
-            if self.process_time:
-                self.client.dgauge(
-                    "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
-                )
-            self.client.dgauge(self.name, (time.time_ns() - self._time_ns) / self.mul, labels=self.labels)
+        try:
+            if self.client is not None:
+                if self.process_time:
+                    self.client.dgauge(
+                        "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
+                    )
+                self.client.dgauge(self.name, (time.time_ns() - self._time_ns) / self.mul, labels=self.labels)
+        except MonitoringRequestError as e:
+            self.client.log.error(str(e))
 
 
 class PM:
@@ -162,7 +169,7 @@ class Ingestion:
             self.metrics = []
             self.timer = time.time() + self.period
         else:
-            raise Exception("{status} Send metrics: {text}".format(status=response.status_code, text=response.text))
+            raise MonitoringRequestError("{status} Send metrics: {text}".format(status=response.status_code, text=response.text))
 
     def __call__(self, value: dict):
         self.metrics.append(value)
@@ -174,8 +181,8 @@ class Ingestion:
         if self._exp < time.time():
             response = requests.post(
                 url=API_IAM,
-                json={'jwt': self.jwt},
-                headers={'Content-Type': 'application/json'}
+                json={"jwt": self.jwt},
+                headers={"Content-Type": "application/json"}
             )
             if response.status_code == 200:
                 self._token = response.json().get("iamToken")
@@ -188,12 +195,12 @@ class Ingestion:
         key = self.credentials["service_account_key"]
         return jwt.encode(
             {
-                'aud': API_IAM,
-                'iss': key["service_account_id"],
-                'iat': now,
-                'exp': now + 360
+                "aud": API_IAM,
+                "iss": key["service_account_id"],
+                "iat": now,
+                "exp": now + 360
             },
             key["private_key"],
-            algorithm='PS256',
-            headers={'kid': key["id"]}
+            algorithm="PS256",
+            headers={"kid": key["id"]}
         )
