@@ -28,7 +28,16 @@ class Monitoring:
             credentials, group_id, resource_type or str(os.uname()[1]), resource_id or str(os.getpid()),
             elements if 0 < elements <= 100 else 100, period
         ]
-        self.log = log or logging.getLogger("YandexMonitoring")
+        if log is not None:
+            self.log = log
+        else:
+            self.log = logging.getLogger("YandexMonitoring")
+            if not self.log.handlers:
+                h = logging.StreamHandler()
+                h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+                self.log.addHandler(h)
+                self.log.setLevel(logging.WARNING)
+                self.log.propagate = False
         self._send = PM(*args, workers=workers, log=self.log) if workers > 0 else Ingestion(*args)
 
     def _metric(
@@ -89,7 +98,7 @@ class Chrono(object):
                         "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
                     )
                 self.client.dgauge(self.name, (time.time_ns() - self._time_ns) / self.mul, labels=self.labels)
-        except MonitoringRequestError as e:
+        except Exception as e:
             self.client.log.error(str(e))
 
 
