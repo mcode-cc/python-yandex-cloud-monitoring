@@ -1,6 +1,6 @@
 import os
 import time
-import datetime
+from datetime import datetime, timezone
 import weakref
 from multiprocessing import Process, Queue
 import logging
@@ -11,22 +11,21 @@ import requests
 
 API_IAM = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
 API_MONITORING = "https://monitoring.api.cloud.yandex.net/monitoring/v2/data/write"
+CONNECTION_TIMEOUT = 3
+READ_TIMEOUT = 5
+
 IAM_EXP = 3 * 60 * 60
 AUTH_TYPE = "Bearer"
-
-
-class MonitoringRequestError(Exception):
-    pass
 
 
 class Monitoring:
     def __init__(
         self, credentials: dict = None, group_id: str = "default", resource_type: str = None, resource_id: str = None,
-            elements: int = 100, period: int = 10, workers: int = 0, log=None
+            elements: int = 100, period: int = 10, workers: int = 0, timeout=(CONNECTION_TIMEOUT,READ_TIMEOUT), log=None
     ):
         args = [
             credentials, group_id, resource_type or str(os.uname()[1]), resource_id or str(os.getpid()),
-            elements if 0 < elements <= 100 else 100, period
+            elements if 0 < elements <= 100 else 100, period, timeout
         ]
         if log is not None:
             self.log = log
@@ -34,7 +33,7 @@ class Monitoring:
             self.log = logging.getLogger("YandexMonitoring")
             if not self.log.handlers:
                 h = logging.StreamHandler()
-                h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+                h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
                 self.log.addHandler(h)
                 self.log.setLevel(logging.WARNING)
                 self.log.propagate = False
@@ -48,7 +47,7 @@ class Monitoring:
             "name": name,
             "value": value,
             "type": t,
-            "ts": ts.isoformat() if ts is not None else datetime.datetime.now(datetime.timezone.utc).isoformat()
+            "ts": ts.isoformat() if ts is not None else datetime.now(timezone.utc).isoformat()
         }
         if labels is not None:
             result["labels"] = labels
@@ -122,22 +121,22 @@ class PM:
     def __call__(self, value: dict):
         self.queue.put(value)
 
-    def process(self, *args, queue: Queue = None):
+    @staticmethod
+    def process(*args, queue: Queue = None):
         sender = Ingestion(*args)
         while True:
             value = queue.get()
             if isinstance(value, dict):
                 try:
                     sender(value)
-                except Exception as e:
-                    self.log.error(str(e))
-                    self.queue.put(value)
+                except Exception:
+                    pass
             else:
                 break
 
 
 class Ingestion:
-    def __init__(self, credentials, group_id, resource_type, resource_id, elements, period):
+    def __init__(self, credentials, group_id, resource_type, resource_id, elements, period, timeout = None):
         self.credentials = credentials
         self._exp = 0
         self._token = None
@@ -151,6 +150,7 @@ class Ingestion:
             "resource_id": str(resource_id)
         }
         self.timer = time.time() + self.period
+        self._timeout = timeout
         self._finalizer = weakref.finalize(self, self.finalize, 0)
 
     def finalize(self, c: int = 0):
@@ -172,13 +172,12 @@ class Ingestion:
             headers={
                 "Content-Type": "application/json",
                 "Authorization": " ".join([AUTH_TYPE, self.iam_token])
-            }
+            },
+            timeout=self._timeout
         )
         if response.status_code == 200 and response.json()["writtenMetricsCount"] == len(self.metrics):
             self.metrics = []
             self.timer = time.time() + self.period
-        else:
-            raise MonitoringRequestError("{status} Send metrics: {text}".format(status=response.status_code, text=response.text))
 
     def __call__(self, value: dict):
         self.metrics.append(value)
