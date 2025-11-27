@@ -21,7 +21,8 @@ AUTH_TYPE = "Bearer"
 class Monitoring:
     def __init__(
         self, credentials: dict = None, group_id: str = "default", resource_type: str = None, resource_id: str = None,
-            elements: int = 100, period: int = 10, workers: int = 0, timeout=(CONNECTION_TIMEOUT,READ_TIMEOUT), log=None
+            elements: int = 100, period: int = 10, workers: int = 0,
+            timeout=(CONNECTION_TIMEOUT, READ_TIMEOUT), log=None
     ):
         args = [
             credentials, group_id, resource_type or str(os.uname()[1]), resource_id or str(os.getpid()),
@@ -94,7 +95,9 @@ class Chrono(object):
             if self.client is not None:
                 if self.process_time:
                     self.client.dgauge(
-                        "process_" + self.name, (time.process_time_ns() - self._process_time_ns) / self.mul, labels=self.labels
+                        "process_" + self.name,
+                        (time.process_time_ns() - self._process_time_ns) / self.mul,
+                        labels=self.labels
                     )
                 self.client.dgauge(self.name, (time.time_ns() - self._time_ns) / self.mul, labels=self.labels)
         except Exception as e:
@@ -136,7 +139,7 @@ class PM:
 
 
 class Ingestion:
-    def __init__(self, credentials, group_id, resource_type, resource_id, elements, period, timeout = None):
+    def __init__(self, credentials, group_id, resource_type, resource_id, elements, period, timeout=None):
         self.credentials = credentials
         self._exp = 0
         self._token = None
