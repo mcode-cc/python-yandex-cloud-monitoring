@@ -130,10 +130,7 @@ class PM:
         while True:
             value = queue.get()
             if isinstance(value, dict):
-                try:
-                    sender(value)
-                except Exception:
-                    pass
+                sender(value)
             else:
                 break
 
@@ -169,18 +166,22 @@ class Ingestion:
         return result
 
     def _write(self):
-        response = requests.post(
-            url=API_MONITORING + self._required,
-            json=self._payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": " ".join([AUTH_TYPE, self.iam_token])
-            },
-            timeout=self._timeout
-        )
-        if response.status_code == 200 and response.json()["writtenMetricsCount"] == len(self.metrics):
-            self.metrics = []
-            self.timer = time.time() + self.period
+        try:
+            response = requests.post(
+                url=API_MONITORING + self._required,
+                json=self._payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": " ".join([AUTH_TYPE, self.iam_token])
+                },
+                timeout=self._timeout
+            )
+        except Exception:
+            pass
+        else:
+            if response.status_code == 200 and response.json()["writtenMetricsCount"] == len(self.metrics):
+                self.metrics = []
+                self.timer = time.time() + self.period
 
     def __call__(self, value: dict):
         self.metrics.append(value)
