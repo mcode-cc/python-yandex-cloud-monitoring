@@ -28,22 +28,25 @@
 #
 #####################################################################################
 
-from __future__ import absolute_import
-
 import os
 from setuptools import setup, find_namespace_packages
 
-
-base_dir = os.path.dirname(__file__)
 about = {}
-if base_dir:
-    os.chdir(base_dir)
+base_dir = os.path.dirname(__file__)
+
 with open(os.path.join(base_dir, "pyclm", "monitoring", "__about__.py")) as f:
     exec(f.read(), about)
 
 with open(os.path.join(base_dir, "README.md"), "r") as f:
     long_description = f.read()
 
+
+def parse_requirements_file(filename):
+    with open(filename) as fid:
+        return [ln.strip() for ln in fid if ln.strip() and not ln.strip().startswith("#")]
+
+
+install_requires = parse_requirements_file("requirements.txt")
 
 setup(
     name=about["__title__"],
@@ -59,29 +62,25 @@ setup(
     author=about["__author__"],
     author_email=about["__email__"],
     platforms=['Any'],
-    install_requires=["PyJWT~=2.3.0", "requests>=2.26.0"],
-    packages=find_namespace_packages(include=['pyclm.*']),
+    install_requires=install_requires,
+    packages=find_namespace_packages(include=["pyclm.*"]),
     include_package_data=True,
-    data_files=[('.', ['LICENSE', 'COPYRIGHT'])],
     zip_safe=False,
-    python_requires=">=3.7",
+    python_requires=">=3.6,<=3.8",
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Development Status :: 1 - Planning",
+        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "Development Status :: 3 - Alpha",
         "Environment :: No Input/Output (Daemon)",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Internet",
         "Topic :: Communications",
-        "Topic :: Database",
         "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: System :: Networking"
     ],
     keywords='yandex cloud monitoring trace'

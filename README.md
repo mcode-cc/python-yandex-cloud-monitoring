@@ -5,6 +5,9 @@
 
 # Python Client for Yandex Cloud Monitoring
  
+## Supported Python versions
+
+The 0.1.* release line officially supports Python 3.6–3.8 (see `python_requires` and classifiers in `setup.py`). Make sure your dependencies (especially `cryptography`) are installed with versions compatible with your interpreter.
 
 
 ## Installation
@@ -81,19 +84,23 @@ _period_ -  Number of seconds to wait for new log entries before writing.
 
 _workers_ - Number of process ingestion.
 
+_timeout_ - Timeouts HTTP requests.
+
+Timeouts can be configured via the `timeout` argument:
 
 ```python
-from pyclm.monitoring import Monitoring, Chrono
+from pyclm.monitoring import Monitoring
 
-metrics = Monitoring()
-
-with Chrono(metrics, name="elapsed", labels={"measured": "calculation"}, mul=10**9):
-    # ... measured calculation ...
-
+metrics = Monitoring(
+    credentials={...},
+    group_id="default",
+    resource_type="...",
+    resource_id="...",
+    elements=100,
+    period=10,
+    workers=1,
+    timeout=(3, 5),  # (connect_timeout, read_timeout) in seconds
+)
 ```
 
-_name_ - Name of the metric. The default value is **elapsed**. Additional metric **process_{name}** sum of the kernel and user-space CPU time.
-
-_mul_ - Process time for profiling default as seconds mul = 10^9 .. nanoseconds mul = 1
-
-_labels_ - Metric labels as _key:value_ pairs.
+By default, `timeout=(3, 5)` is used for all outgoing HTTP requests (connection timeout 3 seconds, read timeout 5 seconds).
