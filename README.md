@@ -7,7 +7,8 @@
  
 ## Supported Python versions
 
-The 0.1.* release line officially supports Python 3.6–3.8 (see `python_requires` and classifiers in `setup.py`). Make sure your dependencies (especially `cryptography`) are installed with versions compatible with your interpreter.
+The 1.\*.* release line officially supports Python 3.9–3.12 (see `python_requires` and classifiers in `setup.py`). Make sure your dependencies (especially `cryptography`) are installed with versions compatible with your interpreter.
+PyPy - supported but starting from pypy:3.11
 
 
 ## Installation

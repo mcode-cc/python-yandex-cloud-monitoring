@@ -13,7 +13,11 @@ FROM ${PYTHON_IMAGE}
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev
+RUN if command -v apk >/dev/null 2>&1; then \
+        apk add --no-cache gcc musl-dev libffi-dev openssl-dev; \
+    elif command -v apt-get >/dev/null 2>&1; then \
+        apt-get update && apt-get install -y gcc libffi-dev libssl-dev && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 COPY --from=build /src/dist/ /dist/
 COPY tests /app/tests
