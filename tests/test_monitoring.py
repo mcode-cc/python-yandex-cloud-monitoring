@@ -3,8 +3,11 @@ import unittest
 from unittest import mock
 
 from requests import exceptions as req_exc
+import jwt
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 
-from pyclm.monitoring import Monitoring, Ingestion, PM
+from pyclm.monitoring import Monitoring, Ingestion, PM, API_IAM
 
 
 class MonitoringTests(unittest.TestCase):
@@ -124,6 +127,50 @@ class MonitoringTests(unittest.TestCase):
             with self.assertRaises(req_exc.ReadTimeout):
                 ingestion._write()
         ingestion.finalize(len(ingestion.metrics))
+
+    @staticmethod
+    def test_jwt_ps256_encode_decode():
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        public_key = private_key.public_key()
+
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        public_key_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+
+        now = int(time.time())
+        key = {
+            "service_account_id": "test-service",
+            "private_key": private_key_pem,
+            "id": "test-kid",
+        }
+
+        token = jwt.encode(
+            {
+                "aud": API_IAM,
+                "iss": key["service_account_id"],
+                "iat": now,
+                "exp": now + 360,
+            },
+            key["private_key"],
+            algorithm="PS256",
+            headers={"kid": key["id"]},
+        )
+
+        decoded = jwt.decode(
+            token,
+            public_key_pem,
+            algorithms=["PS256"],
+            audience=API_IAM,
+        )
+
+        assert decoded["aud"] == API_IAM
+        assert decoded["iss"] == key["service_account_id"]
 
 
 if __name__ == "__main__":
